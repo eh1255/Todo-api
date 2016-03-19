@@ -76,6 +76,46 @@ app.delete('/todos/:id', function(req, res){
 });
 
 
+// PUT /todos/:id
+app.put('/todos/:id', function(req, res){
+	
+	// Find the specified item
+	var todoId = parseInt(req.params.id, 10);	
+	var matchedTodo = _.findWhere(todos, {id: todoId});
+	
+	// Stop now if nothing was found
+	if (!matchedTodo) {
+		return res.status(404).send();
+	}
+
+	// Get the json from the request
+	var body = _.pick(req.body, 'description', 'completed');
+	var validAttributes = {};
+
+	// Validate completed
+	if (body.hasOwnProperty('completed') && _.isBoolean(body.completed)) {
+		// Has the property and is a boolean
+		validAttributes.completed = body.completed;
+	
+	} else if (body.hasOwnProperty('completed')){
+		// Had the proprty, but it wasn't a boolean
+		return res.status(400).send();
+	} 
+
+	// Validate description
+	if (body.hasOwnProperty('description') && _.isString(body.description) && body.description.trim().length > 0) {
+		validAttributes.description = body.description;
+	} else if (body.hasOwnProperty('description')) {
+		return res.status(400).send();
+	} 
+
+	// If we make it to here, everything went well
+	// .ext add/overwrites new data to an object
+	_.extend(matchedTodo, validAttributes);
+	return res.status(200).send(matchedTodo);
+});
+
+
 app.listen(PORT, function() {
 	console.log('Express listening on port ' + PORT + '!');
 });
