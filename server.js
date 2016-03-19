@@ -14,6 +14,12 @@ app.get('/', function(req, res){
 	res.send('Todo API Root');
 });
 
+// API Basics: CRUD
+// Create
+// Read
+// Update
+// Delete
+
 // GET /todos
 app.get('/todos', function(req, res) {
 	res.json(todos);
@@ -51,8 +57,24 @@ app.post('/todos', function(req, res){
 	body.id = todoNextId++; // set first, then increment
 	todos.push(body);
 
+	// Send a JSON response 
 	res.json(body);
 });
+
+// DELETE /todos/:id
+app.delete('/todos/:id', function(req, res){
+	var todoId = parseInt(req.params.id, 10);	// The request value comes in as a string so it has to be converted to a base 10 number
+	var matchedTodo = _.findWhere(todos, {id: todoId});
+
+	if (!matchedTodo) {
+		return res.status(404).json({"error": "no todo with that id"}); 
+	} else {
+		// _.without(array, value1, value2,...) returns an array with specified values removed
+		todos = _.without(todos, matchedTodo);
+		res.json(matchedTodo); // json automatically sets status to 200 (okay)
+	}
+});
+
 
 app.listen(PORT, function() {
 	console.log('Express listening on port ' + PORT + '!');
