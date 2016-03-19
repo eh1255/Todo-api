@@ -20,7 +20,7 @@ app.get('/', function(req, res){
 // Update
 // Delete
 
-// GET /todos?completed=true
+// GET /todos?completed=true&q=queryString
 app.get('/todos', function(req, res) {
 	var queryParams = req.query;
 	var filteredTodos = todos;
@@ -31,6 +31,13 @@ app.get('/todos', function(req, res) {
 
 	} else if (queryParams.hasOwnProperty('completed') && queryParams.completed === 'false') {
 		filteredTodos = _.where(filteredTodos, {completed: false});
+	}
+
+	// Check if the q property exists and isn't empty
+	if (queryParams.hasOwnProperty('q') && queryParams.q.length > 0) {
+		filteredTodos = _.filter(filteredTodos, function(todo) {
+			return todo.description.toLowerCase().indexOf(queryParams.q.toLowerCase()) > -1 ; // -1 indicates the result wasn't contained
+		});
 	}
 
 	res.json(filteredTodos);
