@@ -35,7 +35,7 @@ app.get('/todos/:id', function(req, res) {
 		if (todoId === todo.id) {
 			matchedTodo = todo;
 		}
-	})
+	});
 
 	// If it was found, send it back.
 	if (matchedTodo) {
@@ -43,9 +43,6 @@ app.get('/todos/:id', function(req, res) {
 	} else {
 		res.status(404).send(); // 404 error means not found
 	}
-
-
-	res.send('Asking for todo with id of ' + req.params.id);
 });
 
 app.listen(PORT, function() {
