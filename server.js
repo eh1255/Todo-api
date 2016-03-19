@@ -1,5 +1,6 @@
 var express = require('express');
 var bodyParser = require('body-parser');
+var _ = require('underscore');	// Documentiation http://underscorejs.org/#where
 
 var app = express();
 var PORT = process.env.PORT || 3000;
@@ -21,16 +22,10 @@ app.get('/todos', function(req, res) {
 // GET /todos/:id (the : represents a variable that will be passed in)
 app.get('/todos/:id', function(req, res) {
 	var todoId = parseInt(req.params.id, 10);	// The request value comes in as a string so it has to be converted to a base 10 number
-	var  matchedTodo;
+	
+	// Filter for the object with that id. See http://underscorejs.org/#findWhere
+	var matchedTodo = _.findWhere(todos, {id: todoId});
 
-	// Iterate over all todos looking for a match
-	todos.forEach( function (todo) {
-		if (todoId === todo.id) {
-			matchedTodo = todo;
-		}
-	});
-
-	// If it was found, send it back.
 	if (matchedTodo) {
 		res.json(matchedTodo);
 	} else {
@@ -40,10 +35,19 @@ app.get('/todos/:id', function(req, res) {
 
 // POST /todos
 app.post('/todos', function(req, res){
-	var body = req.body;
-	console.log('description: ' + body.description);
+	
+	// _.pick() pulls off only the info you're interested
+	// trim() removes leading and trailing spaces
+	var body = _.pick(req.body, 'description', 'completed');
+	console.log(body);
+	
+	// Validate the data. 
+	if (!_.isBoolean(body.completed) || !_.isString(body.description) || body.description.trim().length === 0){
+		return res.status(400).send(); // 400 means bad data and response couldn't be completed
+	}
 
 	// Add the new todo item to the todo items array
+	body.description = body.description.trim();
 	body.id = todoNextId++; // set first, then increment
 	todos.push(body);
 
