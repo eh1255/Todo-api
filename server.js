@@ -131,20 +131,49 @@ app.post('/todos', function(req, res) {
 
 // DELETE /todos/:id
 app.delete('/todos/:id', function(req, res) {
-	var todoId = parseInt(req.params.id, 10); // The request value comes in as a string so it has to be converted to a base 10 number
-	var matchedTodo = _.findWhere(todos, {
-		id: todoId
-	});
+	// var todoId = parseInt(req.params.id, 10); // The request value comes in as a string so it has to be converted to a base 10 number
+	// var matchedTodo = _.findWhere(todos, {
+	// 	id: todoId
+	// });
 
-	if (!matchedTodo) {
-		return res.status(404).json({
-			"error": "no todo with that id"
-		});
-	} else {
-		// _.without(array, value1, value2,...) returns an array with specified values removed
-		todos = _.without(todos, matchedTodo);
-		res.json(matchedTodo); // json automatically sets status to 200 (okay)
-	}
+	// if (!matchedTodo) {
+	// 	return res.status(404).json({
+	// 		"error": "no todo with that id"
+	// 	});
+	// } else {
+	// 	// _.without(array, value1, value2,...) returns an array with specified values removed
+	// 	todos = _.without(todos, matchedTodo);
+	// 	res.json(matchedTodo); // json automatically sets status to 200 (okay)
+	// }
+
+	var todoId = parseInt(req.params.id, 10);
+
+	db.todo.destroy({
+		where: {
+			id: todoId
+		}
+	}).then(function (numRowsDeleted) {
+		if (numRowsDeleted === 0) {
+			res.status(404).json({
+				error: 'No todo with that id'
+			});
+		} else {
+			res.status(204).send(); // 204 is a good response with no data attached
+		}
+	}, function() {
+		res.status(500).send();
+	});
+	// This is an alternate implementation
+	// db.todo.findById(todoId).then(function(todo){
+	// 	// If successfully found
+	// 	todo.destroy();
+	// 	res.json(todo);
+	// }, function() {
+	// 	// If not found
+	// 	res.status(404).send();
+	// }).catch(function(error){
+	// 	res.status(500).send();
+	// });
 });
 
 
