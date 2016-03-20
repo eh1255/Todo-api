@@ -1,10 +1,6 @@
-var Sequelize = require('sequelize');								// Importing
-
-// If on heroku (production) use postgres, otherwise use sqlite
+var Sequelize = require('sequelize');
 var env = process.env.NODE_ENV || 'development';
 var sequelize;
-
-console.log('Running in environment: ' + env);
 
 if (env === 'production') {
 	sequelize = new Sequelize(process.env.DATABASE_URL, {
@@ -17,7 +13,6 @@ if (env === 'production') {
 	});
 }
 
-// Only one thing can be exported, so we make it an object and give it multiple attributes
 var db = {};
 
 db.todo = sequelize.import(__dirname + '/models/todo.js');
