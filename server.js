@@ -51,18 +51,30 @@ app.get('/todos', function(req, res) {
 
 // GET /todos/:id (the : represents a variable that will be passed in)
 app.get('/todos/:id', function(req, res) {
-	var todoId = parseInt(req.params.id, 10); // The request value comes in as a string so it has to be converted to a base 10 number
+	// var todoId = parseInt(req.params.id, 10); // The request value comes in as a string so it has to be converted to a base 10 number
 
-	// Filter for the object with that id. See http://underscorejs.org/#findWhere
-	var matchedTodo = _.findWhere(todos, {
-		id: todoId
-	});
+	// // Filter for the object with that id. See http://underscorejs.org/#findWhere
+	// var matchedTodo = _.findWhere(todos, {
+	// 	id: todoId
+	// });
 
-	if (matchedTodo) {
-		res.json(matchedTodo);
-	} else {
-		res.status(404).send(); // 404 error means not found
-	}
+	// if (matchedTodo) {
+	// 	res.json(matchedTodo);
+	// } else {
+	// 	res.status(404).send(); // 404 error means not found
+	// }
+
+	var todoId = parseInt(req.params.id, 10);
+
+	db.todo.findById(todoId).then(function(todo){
+		if (todo) {
+			res.json(todo);
+		} else {
+			res.status(400).send();	// 400 = bad data
+		}
+	}).catch(function(error){
+		res.status(500).send();		// 500 = generic error on the server side
+	})
 });
 
 // POST /todos
