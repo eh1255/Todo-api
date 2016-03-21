@@ -297,18 +297,40 @@ app.post('/users/login', function(req, res) {
 
 	// Get the body with only email and password included
 	var body = _.pick(req.body, 'email', 'password');
+	var userInstance;
 
 	db.user.authenticate(body).then(function(user){
+
+		console.log('test');
+		console.log('user' + user);
+
+
 		var token = user.generateToken('authentication');
-		if (token) {
-			res.header('Auth', token).json(user.toPublicJSON());
-		} else {
-			res.status(401).send();
-		}
-	}, function (error){
+		userInstance = user;
+
+		console.log(token);
+		console.log(user);
+
+		return db.token.create({
+			token: token
+		});
+		
+	}).then(function(tokenInstance){
+		res.header('Auth', tokenInstance.get('token')).json(userInstance.toPublicJSON());
+	}).catch(function(error){
+		console.error(error);
 		res.status(401).send();
 	});
 });
+
+// DELETE /users/login
+app.delete('/users/login', middleware.requireAuthentication, function(req, res){
+	req.token.destroy().then(function() {
+		res.status(204).send();
+	}).catch( function() {
+		res.status(500).send();
+	})
+})
 
 // Now that all the functionality has been pinned on, start the server
 db.sequelize.sync({

@@ -58,6 +58,7 @@ module.exports = function(sequelize, DataTypes) {
 
 					// If data is bad
 					if (typeof body.email !== 'string' || typeof body.password !== 'string') {
+						console.log('bad login data');
 						return reject();
 					}
 
@@ -69,6 +70,7 @@ module.exports = function(sequelize, DataTypes) {
 					}).then(function(user){
 						// Check if it found something and if it matches the salted and hashed password
 						if (!user || !bcrypt.compareSync(body.password, user.get('password_hash'))) {
+							console.log('no maching username/password');
 							return reject();	// The call was correct, but nothing was found
 						} 
 
@@ -76,7 +78,8 @@ module.exports = function(sequelize, DataTypes) {
 						resolve(user);
 
 					}, function(error){
-						reject();
+						console.log('bad query');
+						reject(error);
 					});
 				})
 			},
@@ -84,7 +87,7 @@ module.exports = function(sequelize, DataTypes) {
 			findByToken: function(token) {
 				return new Promise(function(resolve, reject){
 					try {
-						
+
 						var decodedJWT = jwt.verify(token, 'qwerty098');
 						var bytes = cryptojs.AES.decrypt(decodedJWT.token, 'abc123!"#$%');
 						var tokenData = JSON.parse(bytes.toString(cryptojs.enc.Utf8));
