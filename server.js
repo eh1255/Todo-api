@@ -257,6 +257,22 @@ app.put('/todos/:id', function(req, res) {
 
 });
 
+// Creating new users
+app.post('/users', function(req, res) {
+	
+	// Get the body with only email and password included
+	var body = _.pick(req.body, 'email', 'password');
+
+	// Create a user with those values
+	db.user.create(body).then(function(user){
+		res.json(user);
+	}, function(error){
+		res.status(400).json(error);
+	})
+});
+
+
+// Now that all the functionality has been pinned on, start the server
 db.sequelize.sync().then(function() {
 	app.listen(PORT, function() {
 		console.log('Express listening on port ' + PORT + '!');
