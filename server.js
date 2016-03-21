@@ -50,8 +50,10 @@ app.get('/todos', middleware.requireAuthentication, function(req, res) {
 
 	// res.json(filteredTodos);
 
-	var query = req.query; console.log(query);
-	var where = {};
+	var query = req.query;
+	var where = {
+		userId: req.user.get('id')
+	}
 
 	// If the query specifies completeness
 	if (query.hasOwnProperty('completed') && query.completed === 'true') {
@@ -89,8 +91,12 @@ app.get('/todos/:id', middleware.requireAuthentication, function(req, res) {
 	// }
 
 	var todoId = parseInt(req.params.id, 10);
+	var where = {
+		id: todoId,
+		userId: req.user.get('id')
+	}
 
-	db.todo.findById(todoId).then(function(todo){
+	db.todo.findOne({where: where}).then(function(todo){
 		if (todo) {
 			res.json(todo);
 		} else {
@@ -159,7 +165,8 @@ app.delete('/todos/:id', middleware.requireAuthentication, function(req, res) {
 
 	db.todo.destroy({
 		where: {
-			id: todoId
+			id: todoId,
+			userId: req.user.get('id')
 		}
 	}).then(function (numRowsDeleted) {
 		// If nothing was deleted
@@ -245,7 +252,12 @@ app.put('/todos/:id', middleware.requireAuthentication, function(req, res) {
 	}
 
 	// Search for the object by id
-	db.todo.findById(todoId).then(function(todo) {
+	db.todo.findOne({
+		where: {
+			id: todoId,
+			userId: req.user.id
+		}
+	}).then(function(todo) {
 		
 		// Search completed successfully, result is todo:Todo?
 		// If not nil, update and pass back
