@@ -265,7 +265,7 @@ app.post('/users', function(req, res) {
 
 	// Create a user with those values
 	db.user.create(body).then(function(user){
-		res.json(user);
+		res.json(user.toPublicJSON());
 	}, function(error){
 		res.status(400).json(error);
 	})
@@ -273,7 +273,7 @@ app.post('/users', function(req, res) {
 
 
 // Now that all the functionality has been pinned on, start the server
-db.sequelize.sync().then(function() {
+db.sequelize.sync({force: true}).then(function() {
 	app.listen(PORT, function() {
 		console.log('Express listening on port ' + PORT + '!');
 	});
