@@ -153,16 +153,21 @@ app.delete('/todos/:id', function(req, res) {
 			id: todoId
 		}
 	}).then(function (numRowsDeleted) {
+		// If nothing was deleted
 		if (numRowsDeleted === 0) {
 			res.status(404).json({
 				error: 'No todo with that id'
 			});
+		// If something was deleted
 		} else {
 			res.status(204).send(); // 204 is a good response with no data attached
 		}
+
+	// An error occurred
 	}, function() {
 		res.status(500).send();
 	});
+
 	// This is an alternate implementation
 	// db.todo.findById(todoId).then(function(todo){
 	// 	// If successfully found
@@ -180,42 +185,76 @@ app.delete('/todos/:id', function(req, res) {
 // PUT /todos/:id
 app.put('/todos/:id', function(req, res) {
 
+	// // Find the specified item
+	// var todoId = parseInt(req.params.id, 10);
+	// var matchedTodo = _.findWhere(todos, {
+	// 	id: todoId
+	// });
+
+	// // Stop now if nothing was found
+	// if (!matchedTodo) {
+	// 	return res.status(404).send();
+	// }
+
+	// // Get the json from the request
+	// var body = _.pick(req.body, 'description', 'completed');
+	// var validAttributes = {};
+
+	// // Validate completed
+	// if (body.hasOwnProperty('completed') && _.isBoolean(body.completed)) {
+	// 	// Has the property and is a boolean
+	// 	validAttributes.completed = body.completed;
+
+	// } else if (body.hasOwnProperty('completed')) {
+	// 	// Had the proprty, but it wasn't a boolean
+	// 	return res.status(400).send();
+	// }
+
+	// // Validate description
+	// if (body.hasOwnProperty('description') && _.isString(body.description) && body.description.trim().length > 0) {
+	// 	validAttributes.description = body.description;
+	// } else if (body.hasOwnProperty('description')) {
+	// 	return res.status(400).send();
+	// }
+
+	// // If we make it to here, everything went well
+	// // .ext add/overwrites new data to an object
+	// _.extend(matchedTodo, validAttributes);
+	// return res.status(200).send(matchedTodo);
+
 	// Find the specified item
-	var todoId = parseInt(req.params.id, 10);
-	var matchedTodo = _.findWhere(todos, {
-		id: todoId
-	});
+	var todoId = parseInt(req.params.id, 10);	
+	var body   = _.pick(req.body, 'description', 'completed');
+	var attributes = {};
 
-	// Stop now if nothing was found
-	if (!matchedTodo) {
-		return res.status(404).send();
+	if (body.hasOwnProperty('completed')){
+		attributes.completed = body.completed;
 	}
 
-	// Get the json from the request
-	var body = _.pick(req.body, 'description', 'completed');
-	var validAttributes = {};
-
-	// Validate completed
-	if (body.hasOwnProperty('completed') && _.isBoolean(body.completed)) {
-		// Has the property and is a boolean
-		validAttributes.completed = body.completed;
-
-	} else if (body.hasOwnProperty('completed')) {
-		// Had the proprty, but it wasn't a boolean
-		return res.status(400).send();
+	if (body.hasOwnProperty('description')) {
+		attributes.description = body.description;
 	}
 
-	// Validate description
-	if (body.hasOwnProperty('description') && _.isString(body.description) && body.description.trim().length > 0) {
-		validAttributes.description = body.description;
-	} else if (body.hasOwnProperty('description')) {
-		return res.status(400).send();
-	}
+	// Search for the object by id
+	db.todo.findById(todoId).then(function(todo) {
+		
+		// Search completed successfully, result is todo:Todo?
+		// If not nil, update and pass back
+		// If nil, send no data response
+		if (todo) {
+			todo.update(attributes).then(function(todo){
+				res.json(todo);
+			}, function(error){
+				res.status(400).json(error);
+			});
+		} else {
+			res.status(404).send();
+		}
+	}, function() {
+		// Search did not complete. Send server error
+		res.status(500).send();
+	})
 
-	// If we make it to here, everything went well
-	// .ext add/overwrites new data to an object
-	_.extend(matchedTodo, validAttributes);
-	return res.status(200).send(matchedTodo);
 });
 
 db.sequelize.sync().then(function() {
