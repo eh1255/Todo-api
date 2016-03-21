@@ -23,49 +23,44 @@ var Todo = sequalize.define('todo', {
 	}
 })	
 
+// Defining a user model
+var User = sequalize.define('user', {
+	email: Sequelize.STRING
+})
+
+// Define the relationships between objects
+Todo.belongsTo(User);
+User.hasMany(Todo);
+
 // Sync model to the databse. Force true clears the table.
 sequalize.sync({
-		//force: true
+	//	force: true
 	}).then (function() {
 	console.log('Everything is synced');
 
-	// Create a new object
-	Todo.create({
-		description: 'Take out trash'
-	}).then(function(todo){
-		return Todo.create({
-			description: 'Clean office'
-		});
-	
-	// Fetch saved objects
-	}).then(function(){
-		//return Todo.findById(1); // just the item with id 1
-		return Todo.findAll({
+	// User.create({
+	// 	email: 'Moppy@mop.com'
+
+	// }).then( function() {
+	// 	return Todo.create({
+	// 		description: 'Clean yard'
+	// 	})
+
+	// }).then(function(todo) {
+	// 	User.findById(1).then(function(user){
+	// 		user.addTodo(todo);
+	// 	});
+	// });
+
+	User.findById(1).then(function(user) {
+		user.getTodos({
 			where: {
-				description: {
-					$like:'%Office%'	// The % mean anything can come before or after. Not case sensitive.
-				}
+				completed: false
 			}
-		})
-	}).then(function(todos){
-		if (todos) {
-			todos.forEach( function(todo) {
-				console.log(todo.toJSON()); // toJSON just makes it more readable
+		}).then(function(todos) {
+			todos.forEach(function(todo) {
+				console.log(todo.toJSON());
 			})
-		}
-
-	// Log any errors
-	}).catch(function(error){
-		console.log(error);
-	});
-
-
-
-
-	// Fetch object with specific id 
-	Todo.findById(2).then(function(todo){
-		console.log(todo.toJSON());
-	}).catch(function(error){
-		console.log(error);
-	});
+		})
+	})
 });

@@ -3,6 +3,7 @@ var bodyParser = require('body-parser');
 var _ = require('underscore'); // Documentiation http://underscorejs.org/#where
 var db = require('./db.js');
 var bcrypt = require('bcrypt');
+var middleware = require('./middleware.js')(db);
 
 
 var app = express();
@@ -24,7 +25,7 @@ app.get('/', function(req, res) {
 // Delete
 
 // GET /todos?completed=true&q=queryString
-app.get('/todos', function(req, res) {
+app.get('/todos', middleware.requireAuthentication, function(req, res) {
 	// var queryParams = req.query;
 	// var filteredTodos = todos;
 
@@ -73,7 +74,7 @@ app.get('/todos', function(req, res) {
 });
 
 // GET /todos/:id (the : represents a variable that will be passed in)
-app.get('/todos/:id', function(req, res) {
+app.get('/todos/:id', middleware.requireAuthentication, function(req, res) {
 	// var todoId = parseInt(req.params.id, 10); // The request value comes in as a string so it has to be converted to a base 10 number
 
 	// // Filter for the object with that id. See http://underscorejs.org/#findWhere
@@ -101,7 +102,7 @@ app.get('/todos/:id', function(req, res) {
 });
 
 // POST /todos
-app.post('/todos', function(req, res) {
+app.post('/todos', middleware.requireAuthentication, function(req, res) {
 
 	// // _.pick() pulls off only the info you're interested
 	// // trim() removes leading and trailing spaces
@@ -124,14 +125,21 @@ app.post('/todos', function(req, res) {
 	var body = _.pick(req.body, 'description', 'completed');
 	
 	db.todo.create(body).then(function(todo){
-		res.json(todo);
+		// Add the association
+		req.user.addTodo(todo).then(function() {
+			// We have to reload the object now to get the new version with relationships
+			return todo.reload();
+		}).then(function(todo){
+			// Then 
+			res.json(todo);
+		});
 	}).catch(function(error){
 		res.status(400).json(error);	// 400 means bad data
 	});
 });
 
 // DELETE /todos/:id
-app.delete('/todos/:id', function(req, res) {
+app.delete('/todos/:id', middleware.requireAuthentication, function(req, res) {
 	// var todoId = parseInt(req.params.id, 10); // The request value comes in as a string so it has to be converted to a base 10 number
 	// var matchedTodo = _.findWhere(todos, {
 	// 	id: todoId
@@ -184,7 +192,7 @@ app.delete('/todos/:id', function(req, res) {
 
 
 // PUT /todos/:id
-app.put('/todos/:id', function(req, res) {
+app.put('/todos/:id', middleware.requireAuthentication, function(req, res) {
 
 	// // Find the specified item
 	// var todoId = parseInt(req.params.id, 10);
@@ -291,7 +299,9 @@ app.post('/users/login', function(req, res) {
 });
 
 // Now that all the functionality has been pinned on, start the server
-db.sequelize.sync({force: true}).then(function() {
+db.sequelize.sync({
+	force: true
+}).then(function() {
 	app.listen(PORT, function() {
 		console.log('Express listening on port ' + PORT + '!');
 	});
