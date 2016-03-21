@@ -2,6 +2,7 @@ var express = require('express');
 var bodyParser = require('body-parser');
 var _ = require('underscore'); // Documentiation http://underscorejs.org/#where
 var db = require('./db.js');
+var bcrypt = require('bcrypt');
 
 
 var app = express();
@@ -257,7 +258,7 @@ app.put('/todos/:id', function(req, res) {
 
 });
 
-// Creating new users
+// POST /users
 app.post('/users', function(req, res) {
 	
 	// Get the body with only email and password included
@@ -271,6 +272,41 @@ app.post('/users', function(req, res) {
 	})
 });
 
+// POST /users/login
+app.post('/users/login', function(req, res) {
+
+	// Get the body with only email and password included
+	var body = _.pick(req.body, 'email', 'password');
+
+	db.user.authenticate(body).then(function(user){
+		res.json(user.toPublicJSON());
+	}, function (error){
+		res.status(401).send();
+	});
+
+	// If data is bad
+	if (typeof body.email !== 'string' || typeof body.password !== 'string') {
+		return res.status(400).send();
+	}
+
+	// See if a user exists with that email
+	db.user.findOne({
+		where: {
+			email: body.email
+		}
+	}).then(function(user){
+		// Check if it found something and if it matches the salted and hashed password
+		if (!user || !bcrypt.compareSync(body.password, user.get('password_hash'))) {
+			return res.status(401).send();	// The call was correct, but nothing was found
+		} 
+
+		// If the password
+		res.json(user.toPublicJSON());
+
+	}, function(error){
+		res.status(500).send();
+	});
+});
 
 // Now that all the functionality has been pinned on, start the server
 db.sequelize.sync({force: true}).then(function() {
